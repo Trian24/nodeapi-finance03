@@ -22,72 +22,47 @@ Transaction.create = (newTransaction, result) => {
     });
 };
 
-Transaction.findByDivisi = (transactionDivisi, result) => {
-    sql.query(`SELECT * FROM transaksi WHERE divisi = "${transactionDivisi}"`, (err, res) => {
-        if(err){
-            console.log("error: ", err);
-            result(err, null);
-            return;
-        }
+Transaction.getPemasukan = (qparams, result) => {
+    let divisi = (qparams.divisi == null) ? '' : qparams.divisi;
+    let bulan = (qparams.bulan == null) ? '' : qparams.bulan;
+    let tahun = (qparams.tahun == null) ? '' : qparams.tahun;
+    let obj = {status: "OK", total_pemasukan: 0, total_pengeluaran: 0, data: {}};
+    
+    var params = ` where divisi LIKE '%${divisi}%' AND tanggal_transaksi LIKE '${tahun}-${bulan}%'`;
+    var resPem; 
+    var resPen;
+    var resAll;
 
-        if (res.length) {
-            console.log("found by divisi: ", res);
-            result(null, res);
-            return;
-        }
-
-        result({ kind: "not_found" }, null);
-    });
-};
-
-Transaction.findByTahun = (tahun, result) => {
-    console.log(tahun + "yana bangast");
-    sql.query(`SELECT * FROM transaksi WHERE tanggal_transaksi LIKE "${tahun}-%"`, (err, res) => {
-        if(err){
-            console.log("error: ", err);
-            result(err, null);
-            return;
-        }
-
-        if (res.length) {
-            console.log("found by tahun: ", res);
-            result(null, res);
-            return;
-        }
-
-        result({ kind: "not_found" }, null);
-    });
-};
-
-Transaction.findByBulan = (tahun, bulan, result) => {
-    console.log(tahun + "yana bangast" +bulan);
-    sql.query(`SELECT * FROM transaksi WHERE tanggal_transaksi LIKE "${tahun}-${bulan}%"`, (err, res) => {
-        if(err){
-            console.log("error: ", err);
-            result(err, null);
-            return;
-        }
-
-        if (res.length) {
-            console.log("found by bulan: ", res);
-            result(null, res);
-            return;
-        }
-
-        result({ kind: "not_found" }, null);
-    });
-};
-
-Transaction.getAll = result => {
-    sql.query("SELECT * FROM transaksi", (err,res) => {
+    sql.query("SELECT SUM(IF(jenis_transaksi = 'PEMASUKAN', jumlah_transaksi ,0)) AS value_sum_plus FROM transaksi"
+        +params, (err,res) => {
         if (err) {
-            console.log("error: ", err);
+            console.log("error pem: ", err);
+            result(null, err);
+            return;
+        };
+        resPem = res[0].value_sum_plus;
+    });
+    sql.query("SELECT SUM(IF(jenis_transaksi = 'PENGELUARAN', jumlah_transaksi ,0)) AS value_sum_min FROM transaksi"
+        +params, (err,res) => {
+        if (err) {
+            console.log("error pen: ", err);
             result(null, err);
             return;
         }
-      
-        console.log("Transaksi: ", res);
-        result(null, res);
+        resPen = res[0].value_sum_min;
+    });
+
+    sql.query("SELECT * FROM transaksi"+params, (err,res) => {
+        if (err) {
+            console.log("error all: ", err);
+            result(null, err);
+            return;
+        }
+        resAll = res;
+        obj.total_pemasukan = resPem;
+        obj.total_pengeluaran = resPen;
+        obj.data = resAll;
+        result(null, obj);
     });
 };
 

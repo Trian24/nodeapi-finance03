@@ -31,59 +31,14 @@ exports.create = (req, res) => {
 
 // Retrieve all Customers from the database.
 exports.findAll = (req, res) => {
-    Transaction.getAll((err, data) => {
+    const qparams = req.query;
+
+    Transaction.getPemasukan(qparams, (err, data) => {
         if (err)
         res.status(500).send({
             message:
             err.message || "Some error occurred while retrieving customers."
         });
         else res.send(data);
-    });
-};
-
-exports.findOne = (req, res) => {
-    Transaction.findByDivisi(req.params.divisi, (err, data) => {
-        if (err) {
-            if (err.kind === "not_found") {
-                res.status(404).send({
-                message: `Not found divisi ${req.params.divisi}.`
-                });
-            } else {
-                res.status(500).send({
-                message: "Error retrieving divisi " + req.params.divisi
-                });
-            }
-        } else res.send(data);
-    });
-};
-
-exports.findTahun = (req, res) => {
-    Transaction.findByTahun(req.params.tahun, (err, data) => {
-        if (err) {
-            if (err.kind === "not_found") {
-                res.status(404).send({
-                message: `Not found tahun ${req.params.tahun}.`
-                });
-            } else {
-                res.status(500).send({
-                message: "Error retrieving tahun " + req.params.tahun
-                });
-            }
-        } else res.send(data);
-    });
-};
-exports.findBulan = (req, res) => {
-    Transaction.findByBulan(req.params.tahun, req.params.bulan, (err, data) => {
-        if (err) {
-            if (err.kind === "not_found") {
-                res.status(404).send({
-                message: `Not found tahun ${req.params.tahun} bulan ${req.params.bulan}.`
-                });
-            } else {
-                res.status(500).send({
-                message: "Error retrieving tahun " + req.params.tahun + " bulan " + req.params.bulan
-                });
-            }
-        } else res.send(data);
     });
 };
